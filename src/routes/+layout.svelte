@@ -25,6 +25,7 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<title>REN</title>
 </svelte:head>
 
 {@render children()}
