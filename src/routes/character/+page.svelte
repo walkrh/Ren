@@ -19,6 +19,7 @@
 
 	const existing = useQuery(api.characters.mine, {});
 	const save = useMutation(api.characters.save);
+	const lobby = useQuery(api.lobbies.mine, {});
 
 	let name = $state('');
 	let race = $state<RaceId | null>(null);
@@ -44,7 +45,7 @@
 	const spinsDone = $derived([race, origin, constellation].filter(Boolean).length);
 	const nameError = $derived(name.trim() ? validateCharacterName(name) : null);
 	const canSave = $derived(
-		spinsDone === 3 && name.trim().length > 0 && nameError === null && !saving
+		spinsDone === 3 && name.trim().length > 0 && nameError === null && !saving && !lobby.data
 	);
 
 	async function confirm() {
@@ -152,6 +153,15 @@
 						{saving ? 'Saving…' : 'Save survivor'}
 					</button>
 
+					{#if lobby.data}
+						<p class="text-base text-gold">
+							Your survivor is locked while you're in
+							<a
+								href={resolve('/lobbies/[lobbyId]', { lobbyId: lobby.data._id })}
+								class="underline hover:text-rot">{lobby.data.name}</a
+							>. Leave the lobby to save changes.
+						</p>
+					{/if}
 					{#if error}
 						<p class="text-base text-blood" role="alert">{error}</p>
 					{/if}

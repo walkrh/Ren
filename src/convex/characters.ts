@@ -32,6 +32,13 @@ export const save = mutation({
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) throw new ConvexError('Sign in to save a survivor');
 
+		// The lobby shows this survivor to the party, so it is locked while you sit in one.
+		const membership = await ctx.db
+			.query('lobbyMembers')
+			.withIndex('by_user', (q) => q.eq('userId', identity.subject))
+			.first();
+		if (membership) throw new ConvexError('Leave your lobby to change your survivor');
+
 		const nameError = validateCharacterName(args.name);
 		if (nameError) throw new ConvexError(nameError);
 

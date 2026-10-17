@@ -9,6 +9,10 @@
  */
 
 import type * as characters from "../characters.js";
+import type * as games from "../games.js";
+import type * as lib from "../lib.js";
+import type * as lobbies from "../lobbies.js";
+import type * as transforms from "../transforms.js";
 import type * as users from "../users.js";
 
 import type {
@@ -19,6 +23,10 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   characters: typeof characters;
+  games: typeof games;
+  lib: typeof lib;
+  lobbies: typeof lobbies;
+  transforms: typeof transforms;
   users: typeof users;
 }>;
 

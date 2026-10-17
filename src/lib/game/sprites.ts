@@ -1,29 +1,31 @@
 // Pixel sprites rendered by PixelSprite.svelte. '.' is transparent.
 
-export const zombiePalette = {
-	G: '#5fb32e', // skin
-	g: '#3e7a1f', // skin shadow
-	D: '#141811', // outline / sockets
-	R: '#d93030', // eyes
-	W: '#e8e0c5', // teeth
-	B: '#7d1414' // gore
+export const overlordPalette = {
+	D: '#141811', // outline
+	M: '#5a5f68', // plate
+	m: '#3a3e46', // plate shadow
+	L: '#9aa0a8', // highlight
+	R: '#ff2a1f', // eye
+	r: '#7d1414', // eye rim
+	W: '#ffd0c8' // eye glint
 };
 
-export const zombieHead = [
+/** One of the Overlords' machines: a plated head with a single red eye. */
+export const overlordHead = [
 	'.....DDDDDD.....',
-	'...DDGGGGGGDD...',
-	'..DGGGGGGGGGGD..',
-	'.DGGGGGGGGGGGGD.',
-	'.DGGDDDGGGDDDGD.',
-	'.DGDRRRDGDRRRDD.',
-	'.DGDRRRDGDRRRDD.',
-	'.DGGDDDGGGDDDGD.',
-	'.DGGGGGGGGGGGgD.',
-	'.DGGGGGGGGGGggD.',
-	'.DGGDDDDDDDDggD.',
-	'.DGDWDWDWDWDggD.',
-	'.DGDDDDDDDDDgBD.',
-	'..DGGGGGGGGggD..',
-	'...DDgggggggDD..',
-	'.....DDDDDDD....'
+	'...DDMMMMMMDD...',
+	'..DMLLMMMMMMmD..',
+	'.DMLMMMMMMMMmmD.',
+	'.DMLMMDDDDMMMmD.',
+	'.DMMMDrrrrDMMmD.',
+	'.DMMDrRRRRrDMmD.',
+	'.DMMDrRWRRrDMmD.',
+	'.DMMDrRRRRrDMmD.',
+	'.DMMMDrrrrDMMmD.',
+	'.DmMMMDDDDMMmmD.',
+	'.DmmMMMMMMMMmmD.',
+	'..DmDmDmDmDmmD..',
+	'..DDmDmDmDmDDD..',
+	'...DDDDDDDDDD...',
+	'................'
 ] as const;

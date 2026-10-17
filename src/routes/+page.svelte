@@ -4,7 +4,7 @@
 	import { api } from '../convex/_generated/api';
 	import type { PageProps } from './$types';
 	import PixelSprite from '#lib/components/PixelSprite.svelte';
-	import { zombieHead, zombiePalette } from '#lib/game/sprites.js';
+	import { overlordHead, overlordPalette } from '#lib/game/sprites.js';
 
 	let { data }: PageProps = $props();
 
@@ -30,9 +30,9 @@
 <div class="flex min-h-dvh flex-col items-center justify-center px-4 py-12">
 	<!-- Title -->
 	<div class="flex flex-col items-center gap-6 text-center">
-		<PixelSprite rows={zombieHead} palette={zombiePalette} scale={6} />
+		<PixelSprite rows={overlordHead} palette={overlordPalette} scale={6} />
 		<h1 class="pixel text-6xl text-rot pixel-shadow sm:text-8xl">Ren</h1>
-		<p class="pixel text-[10px] text-bone-2 sm:text-xs">Wave survival · co-op</p>
+		<p class="pixel text-[10px] text-bone-2 sm:text-xs">2069 · After the blackout · co-op</p>
 	</div>
 
 	<!-- Menu -->
@@ -42,9 +42,9 @@
 				<span class="arrow">▶</span> Play
 			</a>
 		{:else if hasCharacter}
-			<button type="button" disabled data-menu-item class="menu-item" title="Lobbies are next">
-				<span class="arrow">▶</span> Play <span class="ml-auto text-[8px] text-ash">soon</span>
-			</button>
+			<a href={resolve('/lobbies')} data-menu-item class="menu-item pixel-box-rot">
+				<span class="arrow">▶</span> Play
+			</a>
 		{:else}
 			<a href={resolve('/character')} data-menu-item class="menu-item pixel-box-rot">
 				<span class="arrow">▶</span> Play

@@ -23,6 +23,7 @@
 		"@tailwindcss/typography": "^0.5.19",
 		"@tailwindcss/vite": "^4.3.0",
 		"@types/node": "^24",
+		"@types/three": "0.186.0",
 		"@vitest/browser-playwright": "^4.1.8",
 		"eslint": "^10.4.1",
 		"eslint-config-prettier": "^10.1.8",
@@ -46,11 +47,14 @@
 		"#lib/*": "./src/lib/*"
 	},
 	"dependencies": {
+		"@threlte/core": "8.6.1",
+		"@threlte/extras": "9.22.2",
 		"@workos-inc/node": "^10.14.0",
 		"@workos/authkit-session": "^0.5.4",
 		"@workos/authkit-sveltekit": "^0.3.0",
 		"convex": "^1.47.0",
 		"convex-svelte": "^0.15.1",
-		"resend": "^6.34.1"
+		"resend": "^6.34.1",
+		"three": "0.186.1"
 	}
 }
