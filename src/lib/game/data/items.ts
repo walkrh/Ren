@@ -232,7 +232,7 @@ export const abilities = {
 		name: 'Leadership',
 		description: 'Nearby allies gain fortitude. Closer = stronger.',
 		icon: 'icons/capricorn.png',
-		cooldownMs: 180_000,
+		cooldownMs: 60_000,
 		effect: { type: 'aura', stat: 'fortitude', maxValue: 0.3, radius: 8, durationMs: 30_000 }
 	},
 	libra: {
@@ -243,7 +243,7 @@ export const abilities = {
 		name: 'Balance',
 		description: 'Allies below 50% HP jump to 50% and stay there until it ends.',
 		icon: 'icons/libra.png',
-		cooldownMs: 150_000,
+		cooldownMs: 45_000,
 		effect: { type: 'healthFloor', threshold: 0.5, durationMs: 20_000 }
 	},
 	aries: {
@@ -273,7 +273,7 @@ export const pickups = {
 		description: 'Restores 25% HP.',
 		icon: 'icons/patch_kit.png',
 		model: 'models/patch_kit.glb',
-		dropChance: 0.15,
+		dropChance: 0.3,
 		despawnMs: 20_000,
 		effects: [{ type: 'heal', value: 0.25 }]
 	},

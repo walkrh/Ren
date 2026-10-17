@@ -1,3 +1,8 @@
+<script lang="ts" module>
+	// Survives client-side navigation, so coming back to the menu skips the title. A reload plays it again.
+	let titlePlayed = false;
+</script>
+
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { useQuery } from 'convex-svelte';
@@ -12,7 +17,7 @@
 
 	// Title screen burns away, the lore plays once per session, then the menu takes over.
 	const LORE_KEY = 'ren:lore-seen';
-	let titleDone = $state(false);
+	let titleDone = $state(titlePlayed);
 	let lore = $state<'off' | 'waiting' | 'done'>('off');
 	const entered = $derived(titleDone && lore !== 'waiting');
 
@@ -70,7 +75,7 @@
 	<TitleBurn
 		onburn={startLore}
 		ondone={() => {
-			titleDone = true;
+			titleDone = titlePlayed = true;
 			if (lore !== 'waiting') focusMenu();
 		}}
 	/>

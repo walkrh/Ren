@@ -86,7 +86,7 @@ export const constellations: readonly Ability[] = [
 		effect:
 			'Grants fortitude to allies based on distance from you: closer allies gain more, farther allies gain less.',
 		durationSeconds: 30,
-		cooldownSeconds: 180,
+		cooldownSeconds: 60,
 		debuff: null
 	},
 	{
@@ -97,7 +97,7 @@ export const constellations: readonly Ability[] = [
 		effect:
 			'Any ally below 50% health is instantly set to 50% and cannot drop below it while this is active.',
 		durationSeconds: 20,
-		cooldownSeconds: 150,
+		cooldownSeconds: 45,
 		debuff: null
 	},
 	{
