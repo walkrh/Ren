@@ -1,10 +1,25 @@
 // The only runes-bearing game module. Holds the non-reactive World and republishes just the
 // scalars and id lists the DOM/Threlte templates need, once per frame.
-import type { World } from './world.js';
+import type { Player, World } from './world.js';
 import { localPlayer, isHost } from './world.js';
+import type { RaceId } from './traits.js';
+import { reviveProgress, reviveTarget } from './revive.js';
 import { weapons, type RangedWeapon } from './data/items.js';
 import { BOSS_WAVE } from './data/waves.js';
 import { getContext, setContext } from 'svelte';
+
+export type TeammateHud = {
+	id: string;
+	name: string;
+	race: RaceId;
+	hp: number;
+	maxHp: number;
+	downed: boolean;
+	/** name of whoever is reviving them */
+	reviverName: string | null;
+	/** 0–1 while being revived */
+	reviveProgress: number;
+};
 
 export type Hud = {
 	ready: boolean;
@@ -31,6 +46,12 @@ export type Hud = {
 	bossPhase: number;
 	status: 'active' | 'victory' | 'defeat';
 	downed: boolean;
+	/** everyone but you, in join order */
+	team: TeammateHud[];
+	/** a downed teammate in reach you could start reviving */
+	reviveHint: string | null;
+	/** your revive in progress, either direction */
+	revive: { name: string; progress: number; mine: boolean } | null;
 	isHost: boolean;
 	error: string | null;
 };
@@ -89,6 +110,45 @@ export class GameSession {
 		h.overclockMs = Math.max(0, me.weapon.overclockUntil - w.now);
 		h.shieldCharges = me.shieldCharges;
 		h.downed = me.state === 'downed';
+		this.publishTeam(me);
+	}
+
+	private publishTeam(me: Player) {
+		const w = this.world;
+		const h = this.hud;
+		const mates = [...w.players.values()].filter((p) => !p.local);
+		if (h.team.length !== mates.length || mates.some((p, i) => h.team[i].id !== p.id))
+			h.team = mates.map((p) => ({
+				id: p.id,
+				name: p.name,
+				race: p.race,
+				hp: 0,
+				maxHp: 1,
+				downed: false,
+				reviverName: null,
+				reviveProgress: 0
+			}));
+		// Field-wise writes: unchanged values do not re-render.
+		mates.forEach((p, i) => {
+			const t = h.team[i];
+			const rv = reviveProgress(w, p);
+			t.name = p.name;
+			t.hp = Math.ceil(p.hp);
+			t.maxHp = p.maxHp;
+			t.downed = p.state === 'downed';
+			t.reviverName = rv ? (w.players.get(rv.reviverId)?.name ?? null) : null;
+			t.reviveProgress = rv?.progress ?? 0;
+		});
+
+		const mine = w.revive ? w.players.get(w.revive.targetId) : undefined;
+		const onMe = reviveProgress(w, me);
+		if (mine) {
+			h.revive = { name: mine.name, progress: reviveProgress(w, mine)?.progress ?? 0, mine: true };
+		} else if (onMe) {
+			const name = w.players.get(onMe.reviverId)?.name ?? 'A teammate';
+			h.revive = { name, progress: onMe.progress, mine: false };
+		} else h.revive = null;
+		h.reviveHint = mine ? null : (reviveTarget(w, me)?.name ?? null);
 	}
 }
 
@@ -122,6 +182,9 @@ function initialHud(): Hud {
 		bossPhase: 0,
 		status: 'active',
 		downed: false,
+		team: [],
+		reviveHint: null,
+		revive: null,
 		isHost: false,
 		error: null
 	};

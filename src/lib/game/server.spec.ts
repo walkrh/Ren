@@ -4,7 +4,7 @@ import { computeStats } from './data/stats';
 import { memoryDb, run } from './convexFake';
 
 function database() {
-	const { rows, tables, insert, ctx } = memoryDb();
+	const { rows, tables, insert, ctx, as } = memoryDb();
 	const game = insert(
 		'games',
 		{
@@ -36,7 +36,7 @@ function database() {
 		},
 		'p1'
 	);
-	return { rows, tables, insert, game, player, ctx };
+	return { rows, tables, insert, game, player, ctx, as };
 }
 
 afterEach(() => vi.restoreAllMocks());
@@ -136,5 +136,66 @@ describe('authoritative game regressions', () => {
 			projectiles: []
 		});
 		expect(db.tables.get('enemyProjectiles')?.[0].projectiles).toEqual([]);
+	});
+
+	describe('revives', () => {
+		function party() {
+			vi.spyOn(Date, 'now').mockReturnValue(1_000_000);
+			const db = database();
+			Object.assign(db.player, { hp: 80, revives: 0, downs: 0 });
+			const mate = db.insert(
+				'gamePlayers',
+				{ gameId: 'g1', userId: 'u2', state: 'downed', hp: 0, maxHp: 100, revives: 0, downs: 1 },
+				'p2'
+			);
+			db.insert('playerTransforms', { gameId: 'g1', playerId: 'p1', position: { x: 0, z: 0 } });
+			db.insert('playerTransforms', { gameId: 'g1', playerId: 'p2', position: { x: 2, z: 0 } });
+			const args = { gameId: 'g1', targetPlayerId: 'p2' };
+			return { db, mate, args };
+		}
+
+		it('brings a teammate back at half health once the time is up, not before', async () => {
+			const { db, mate, args } = party();
+			expect(await run(games.startRevive, db.ctx, args)).toBe(true);
+			expect(mate.revivedBy).toBe('p1');
+			expect(await run(games.finishRevive, db.ctx, args)).toBe(false);
+			vi.spyOn(Date, 'now').mockReturnValue(1_000_000 + 4000);
+			expect(await run(games.finishRevive, db.ctx, args)).toBe(true);
+			expect(mate).toMatchObject({ state: 'alive', hp: 50 });
+			expect(mate.revivedBy).toBeUndefined();
+			expect(db.player.revives).toBe(1);
+		});
+
+		it('rejects reviving yourself or from across the arena', async () => {
+			const { db, args } = party();
+			expect(await run(games.startRevive, db.ctx, { ...args, targetPlayerId: 'p1' })).toBe(false);
+			db.tables.get('playerTransforms')![1].position = { x: 10, z: 0 };
+			expect(await run(games.startRevive, db.ctx, args)).toBe(false);
+		});
+
+		it('drops a revive when the reviver goes down', async () => {
+			const { db, mate, args } = party();
+			await run(games.startRevive, db.ctx, args);
+			await run(games.damagePlayer, db.ctx, {
+				gameId: 'g1',
+				playerId: 'p1',
+				amount: 500,
+				enemyKey: 'tank'
+			});
+			expect(db.player.state).toBe('downed');
+			expect(mate.revivedBy).toBeUndefined();
+		});
+
+		it('lets a teammate take over an abandoned revive', async () => {
+			const { db, mate, args } = party();
+			db.insert('gamePlayers', { gameId: 'g1', userId: 'u3', state: 'alive', revives: 0 }, 'p3');
+			db.insert('playerTransforms', { gameId: 'g1', playerId: 'p3', position: { x: 2, z: 1 } });
+			await run(games.startRevive, db.ctx, args);
+			db.as('u3');
+			expect(await run(games.startRevive, db.ctx, args)).toBe(false);
+			vi.spyOn(Date, 'now').mockReturnValue(1_000_000 + 8000);
+			expect(await run(games.startRevive, db.ctx, args)).toBe(true);
+			expect(mate.revivedBy).toBe('p3');
+		});
 	});
 });

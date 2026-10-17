@@ -8,6 +8,8 @@
 	const hpFrac = $derived(hud.maxHp > 0 ? Math.max(0, hud.hp / hud.maxHp) : 0);
 	const bossFrac = $derived(hud.bossMaxHp > 0 ? Math.max(0, hud.bossHp / hud.bossMaxHp) : 0);
 	const secs = (ms: number) => Math.ceil(ms / 1000);
+	const frac = (hp: number, max: number) => (max > 0 ? Math.max(0, Math.min(1, hp / max)) : 0);
+	const RACE_DOT = { human: '#b8432f', agarthan: '#d9b44a', forsaken: '#38f0d0' };
 </script>
 
 <div class="pointer-events-none absolute inset-0 z-10 select-none">
@@ -29,6 +31,49 @@
 			{#if hud.overclockMs > 0}<span class="text-gold">⚡ Overclock {secs(hud.overclockMs)}s</span
 				>{/if}
 		</div>
+
+		<!-- Party: everyone else's health and state -->
+		{#if hud.team.length > 0}
+			<div class="mt-2 flex flex-col gap-2">
+				{#each hud.team as mate (mate.id)}
+					{@const f = frac(mate.hp, mate.maxHp)}
+					<div class="w-44">
+						<div class="flex items-baseline justify-between gap-2 text-sm">
+							<span class="flex min-w-0 items-center gap-1.5 text-bone-2">
+								<span class="size-2 shrink-0" style="background: {RACE_DOT[mate.race]}"></span>
+								<span class="truncate">{mate.name}</span>
+							</span>
+							{#if mate.downed}
+								<span class="shrink-0 animate-flicker caps text-blood">Downed</span>
+							{:else}
+								<span class="shrink-0 caps text-ash">{mate.hp}</span>
+							{/if}
+						</div>
+						<div
+							class={[
+								'mt-0.5 h-2 w-full rounded-[2px] border bg-ink-2',
+								mate.downed ? 'border-crimson' : 'border-line-2'
+							]}
+						>
+							{#if mate.downed}
+								<div class="h-full bg-gold-3" style="width: {mate.reviveProgress * 100}%"></div>
+							{:else}
+								<div
+									class={[
+										'h-full transition-[width] duration-200',
+										f > 0.5 ? 'bg-gold' : f > 0.25 ? 'bg-flame' : 'bg-blood'
+									]}
+									style="width: {f * 100}%"
+								></div>
+							{/if}
+						</div>
+						{#if mate.reviverName}
+							<div class="text-sm text-gold-3 italic">↑ {mate.reviverName} reviving</div>
+						{/if}
+					</div>
+				{/each}
+			</div>
+		{/if}
 	</div>
 
 	<!-- Top centre: wave -->
@@ -63,6 +108,22 @@
 		{#if hud.error}<div class="max-w-xs text-blood">{hud.error}</div>{/if}
 	</div>
 
+	<!-- Bottom centre: revive prompt / progress, above the hotbar -->
+	{#if hud.status === 'active' && !hud.downed}
+		<div class="absolute bottom-28 left-1/2 -translate-x-1/2 text-center">
+			{#if hud.revive?.mine}
+				<div class="caps text-gold-3">Reviving {hud.revive.name}</div>
+				<div class="mt-1 h-3 w-56 rounded-[2px] border border-gold-2 bg-ink-2">
+					<div class="h-full bg-gold-3" style="width: {hud.revive.progress * 100}%"></div>
+				</div>
+			{:else if hud.reviveHint}
+				<div class="animate-flicker caps text-bone">
+					Hold <span class="text-gold-3">E</span> to revive {hud.reviveHint}
+				</div>
+			{/if}
+		</div>
+	{/if}
+
 	<!-- Bottom centre: hotbar -->
 	<div class="absolute bottom-5 left-1/2 flex -translate-x-1/2 gap-3">
 		<div class={['w-36 panel px-3 py-2', hud.slot === 'main' && 'panel-lit']}>
@@ -94,7 +155,7 @@
 
 	<!-- Bottom left: controls -->
 	<div class="absolute bottom-5 left-4 text-sm text-ash">
-		WASD move · mouse aim · LMB fire · R reload
+		WASD move · mouse aim · LMB fire · R reload · E revive
 	</div>
 
 	<!-- Overlays -->
@@ -119,8 +180,16 @@
 			<a href={resolve('/lobbies')} class="btn w-64 btn-ghost">Back to lobby</a>
 		</div>
 	{:else if hud.downed}
-		<div class="absolute inset-0 flex items-center justify-center bg-crimson/25">
+		<div class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-crimson/25">
 			<div class="font-display text-3xl font-bold text-blood">Downed</div>
+			{#if hud.revive && !hud.revive.mine}
+				<div class="text-lg text-gold-3 italic">{hud.revive.name} is reviving you</div>
+				<div class="h-3 w-64 rounded-[2px] border border-gold-2 bg-ink-2">
+					<div class="h-full bg-gold-3" style="width: {hud.revive.progress * 100}%"></div>
+				</div>
+			{:else if hud.team.length > 0}
+				<div class="text-lg text-bone-2 italic">Hang on. A teammate can revive you.</div>
+			{/if}
 		</div>
 	{/if}
 </div>

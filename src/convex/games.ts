@@ -27,19 +27,25 @@ import {
 	pickupKinds,
 	weapons
 } from '../lib/game/data/items';
-import { CRIT_MULTIPLIER } from '../lib/game/data/stats';
+import { CRIT_MULTIPLIER, resolveModifiers } from '../lib/game/data/stats';
 import {
 	BLEED_OUT_MS,
 	BOSS_WAVE,
 	INTERMISSION_MS,
+	REVIVE_HP_FRACTION,
 	REVIVE_MS,
+	REVIVE_RANGE,
+	REVIVE_STALE_MS,
 	waveEnemyCount
 } from '../lib/game/data/waves';
 import { statusFromHit } from '../lib/game/combat';
 
 const HOST_STALE_MS = 10_000;
 const HOUSEKEEPING_MS = 1000;
-const REVIVE_RANGE = 2.5;
+/** Transforms arrive at ~12 Hz, so the server's view of a reviver can trail the client's. */
+const REVIVE_RANGE_SLACK = 0.75;
+/** The reviver's clock started half a round trip before the server stamped the revive. */
+const REVIVE_FINISH_TOLERANCE_MS = 300;
 
 /** Upgrade an already-running game without replaying enemies spawned by the old client. */
 async function spawnReceipts(ctx: QueryCtx | MutationCtx, game: Doc<'games'>): Promise<string[]> {
@@ -507,6 +513,10 @@ export const damagePlayer = mutation({
 			reviveCompletesAt: undefined
 		});
 		const everyone = await playersInGame(ctx, gameId);
+		// Going down drops whatever revive this player was doing.
+		for (const p of everyone)
+			if (p.revivedBy === playerId)
+				await ctx.db.patch(p._id, { revivedBy: undefined, reviveCompletesAt: undefined });
 		if (everyone.every((p) => p._id === playerId || p.state === 'downed')) {
 			await endGame(ctx, game, { status: 'defeat', endedAt: now });
 		}
@@ -647,26 +657,53 @@ export const setActiveSlot = mutation({
 	}
 });
 
-// ─── Revives (co-op; built now, exercised later) ───
+// ─── Revives ───
+
+/** Reviver and target stand within reach, by the server's last-seen transforms. */
+async function inReviveRange(
+	ctx: MutationCtx,
+	reviverId: Id<'gamePlayers'>,
+	targetId: Id<'gamePlayers'>
+) {
+	const [a, b] = await Promise.all([transformOf(ctx, reviverId), transformOf(ctx, targetId)]);
+	if (!a || !b) return false;
+	const d = Math.hypot(a.position.x - b.position.x, a.position.z - b.position.z);
+	return d <= REVIVE_RANGE + REVIVE_RANGE_SLACK;
+}
+
+/** Someone else holds this revive and has not abandoned it. */
+async function reviveHeldByOther(
+	ctx: MutationCtx,
+	target: Doc<'gamePlayers'>,
+	playerId: Id<'gamePlayers'>,
+	now: number
+) {
+	if (!target.revivedBy || target.revivedBy === playerId) return false;
+	const reviver = await ctx.db.get(target.revivedBy);
+	if (!reviver || reviver.state !== 'alive') return false;
+	return (target.reviveCompletesAt ?? 0) + REVIVE_STALE_MS > now;
+}
 
 export const startRevive = mutation({
 	args: { gameId: v.id('games'), targetPlayerId: v.id('gamePlayers') },
 	handler: async (ctx, { gameId, targetPlayerId }) => {
 		const { game, player } = await requirePlayer(ctx, gameId);
 		if (game.status !== 'active' || player.state !== 'alive') return false;
+		if (targetPlayerId === player._id) return false;
 		const target = await ctx.db.get(targetPlayerId);
 		if (!target || target.gameId !== gameId || target.state !== 'downed') return false;
-		if (target.revivedBy && target.revivedBy !== player._id) return false;
-		const [a, b] = await Promise.all([
-			transformOf(ctx, player._id),
-			transformOf(ctx, targetPlayerId)
-		]);
-		if (!a || !b) return false;
-		if (Math.hypot(a.position.x - b.position.x, a.position.z - b.position.z) > REVIVE_RANGE)
-			return false;
+		const now = Date.now();
+		if (await reviveHeldByOther(ctx, target, player._id, now)) return false;
+		if (!(await inReviveRange(ctx, player._id, targetPlayerId))) return false;
+		const effects = await ctx.db
+			.query('statusEffects')
+			.withIndex('by_game', (q) => q.eq('gameId', gameId))
+			.collect();
+		// Aries' Impatience (and its fatigue) scales revives like it scales reloads.
+		const duration = REVIVE_MS * resolveModifiers(player._id, effects, now).reload;
 		await ctx.db.patch(targetPlayerId, {
 			revivedBy: player._id,
-			reviveCompletesAt: Date.now() + REVIVE_MS
+			reviveCompletesAt: now + duration
 		});
 		return true;
 	}
@@ -686,13 +723,15 @@ export const finishRevive = mutation({
 	args: { gameId: v.id('games'), targetPlayerId: v.id('gamePlayers') },
 	handler: async (ctx, { gameId, targetPlayerId }) => {
 		const { game, player } = await requirePlayer(ctx, gameId);
-		if (game.status !== 'active') return false;
+		if (game.status !== 'active' || player.state !== 'alive') return false;
 		const target = await ctx.db.get(targetPlayerId);
 		if (!target || target.state !== 'downed' || target.revivedBy !== player._id) return false;
-		if ((target.reviveCompletesAt ?? Infinity) > Date.now()) return false;
+		const due = target.reviveCompletesAt ?? Infinity;
+		if (due - Date.now() > REVIVE_FINISH_TOLERANCE_MS) return false;
+		if (!(await inReviveRange(ctx, player._id, targetPlayerId))) return false;
 		await ctx.db.patch(targetPlayerId, {
 			state: 'alive',
-			hp: target.maxHp * 0.5,
+			hp: target.maxHp * REVIVE_HP_FRACTION,
 			bleedOutAt: undefined,
 			revivedBy: undefined,
 			reviveCompletesAt: undefined

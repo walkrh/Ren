@@ -10,7 +10,16 @@ import {
 	stepProjectiles,
 	type InputFrame
 } from './sim.js';
-import { isHost, localPlayer, type Enemy, type Hit, type SimEvent, type World } from './world.js';
+import {
+	isHost,
+	localPlayer,
+	type Enemy,
+	type Hit,
+	type ReviveAction,
+	type SimEvent,
+	type World
+} from './world.js';
+import { stepRevive } from './revive.js';
 import type { WeaponKey } from './data/items.js';
 import { abilities } from './data/items.js';
 import { dist } from './vec.js';
@@ -28,6 +37,7 @@ export interface SyncPort {
 	startWave(wave: number): void;
 	waveCleared(wave: number): void;
 	useAbility(): void;
+	revive(action: ReviveAction, targetId: string): void;
 	flush(world: World, host: boolean): void;
 }
 
@@ -77,6 +87,7 @@ export function createGameLoop(deps: {
 						e.pos = { x: pose.x, z: pose.z };
 						e.facing = pose.facing;
 					}
+				stepRevive(world, frame.interact);
 				stepLocalPlayer(world, frame, STEP);
 				if (host) stepHost(world, STEP, rng);
 				stepProjectiles(world, STEP);
@@ -95,7 +106,7 @@ export function createGameLoop(deps: {
 
 /** Keep held keys for extra sim steps in one frame, but consume edge-triggered ones. */
 function heldOnly(f: InputFrame): InputFrame {
-	return { ...EMPTY_INPUT, move: f.move, aim: f.aim, fire: f.fire };
+	return { ...EMPTY_INPUT, move: f.move, aim: f.aim, fire: f.fire, interact: f.interact };
 }
 
 export function applyEvents(world: World, sync: SyncPort, host: boolean) {
@@ -180,6 +191,9 @@ function applyEvent(
 			// Debounce until the server row brings back the real cooldown.
 			if (me) me.weapon.abilityReadyAt = world.now + 1000;
 			sync.useAbility();
+			break;
+		case 'revive':
+			sync.revive(ev.action, ev.targetId);
 			break;
 	}
 }

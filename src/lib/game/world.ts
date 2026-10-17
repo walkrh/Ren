@@ -60,6 +60,10 @@ export type Player = {
 	maxHp: number;
 	shieldCharges: number;
 	state: PlayerState;
+	/** the teammate currently reviving this player, from the server row */
+	revivedBy: string | null;
+	/** local ms epoch when this client saw revivedBy change; server times run on another clock */
+	reviveSeenAt: number;
 	stats: BaseStats;
 	weapon: WeaponState;
 	interp: SnapshotBuffer | null;
@@ -119,6 +123,16 @@ export type Pickup = {
 	confirmed: boolean;
 };
 
+/** The local player's revive, predicted ahead of the server row. */
+export type LocalRevive = {
+	targetId: string;
+	/** ms epoch */
+	startedAt: number;
+	durationMs: number;
+	/** ms epoch of the last finish request, for retries */
+	finishSentAt: number;
+};
+
 export type SpawnEntry = { at: number; type: EnemyType; pos: Vec2; extra: boolean; key?: string };
 
 export type Hit = { key: string; multiplier: number };
@@ -130,7 +144,10 @@ export type SimEvent =
 	| { type: 'pickupTouched'; key: string }
 	| { type: 'startWave'; wave: number }
 	| { type: 'waveCleared'; wave: number }
-	| { type: 'useAbility' };
+	| { type: 'useAbility' }
+	| { type: 'revive'; action: ReviveAction; targetId: string };
+
+export type ReviveAction = 'start' | 'cancel' | 'finish';
 
 export type Fx =
 	| { type: 'tracer'; from: Vec2; to: Vec2 }
@@ -153,6 +170,7 @@ export type World = {
 	pickups: Map<string, Pickup>;
 	projectiles: Projectile[];
 	effects: TimedEffect[];
+	revive: LocalRevive | null;
 	wave: {
 		/** highest wave this host has asked the server to start */
 		requested: number;
@@ -189,6 +207,7 @@ export function createWorld(opts: { gameId: string; localUserId: string; game: G
 		pickups: new Map(),
 		projectiles: [],
 		effects: [],
+		revive: null,
 		wave: {
 			requested: 0,
 			requestedAt: -Infinity,

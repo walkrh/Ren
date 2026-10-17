@@ -62,6 +62,8 @@ export type InputFrame = {
 	slot: HotbarSlot | null;
 	/** edge */
 	ability: boolean;
+	/** held: revive a downed teammate in reach */
+	interact: boolean;
 };
 
 export const EMPTY_INPUT: InputFrame = {
@@ -71,7 +73,8 @@ export const EMPTY_INPUT: InputFrame = {
 	melee: false,
 	reload: false,
 	slot: null,
-	ability: false
+	ability: false,
+	interact: false
 };
 
 // ---------- Local player ----------
@@ -82,16 +85,23 @@ export function stepLocalPlayer(world: World, input: InputFrame, dt: number) {
 	const mods = resolveModifiers(p.id, world.effects, world.now, p.weapon.overclockUntil);
 	const w = p.weapon;
 	const main = weapons[p.hotbar.main] as RangedWeapon;
+	// Reviving roots you in place, facing the teammate, with weapons down.
+	const reviving = world.revive ? world.players.get(world.revive.targetId) : undefined;
 
 	// Movement and facing
-	p.vel = scale(input.move, p.stats.moveSpeed * mods.speed);
-	p.pos = clampToRect(
-		add(p.pos, scale(p.vel, dt)),
-		ARENA.halfWidth,
-		ARENA.halfDepth,
-		PLAYER_RADIUS
-	);
-	if (dist(p.pos, input.aim) > 0.05) p.facing = angleTo(p.pos, input.aim);
+	if (reviving) {
+		p.vel = { x: 0, z: 0 };
+		p.facing = angleTo(p.pos, reviving.pos);
+	} else {
+		p.vel = scale(input.move, p.stats.moveSpeed * mods.speed);
+		p.pos = clampToRect(
+			add(p.pos, scale(p.vel, dt)),
+			ARENA.halfWidth,
+			ARENA.halfDepth,
+			PLAYER_RADIUS
+		);
+		if (dist(p.pos, input.aim) > 0.05) p.facing = angleTo(p.pos, input.aim);
+	}
 
 	// Timers
 	w.cooldownT = Math.max(0, w.cooldownT - dt);
@@ -114,6 +124,7 @@ export function stepLocalPlayer(world: World, input: InputFrame, dt: number) {
 	if (input.ability && w.abilityReadyAt <= world.now) world.events.push({ type: 'useAbility' });
 
 	// Attacks
+	if (reviving) return;
 	if (input.melee || (w.slot === 'melee' && input.fire)) w.meleeBufferT = MELEE_BUFFER_S;
 	if (w.meleeBufferT > 0) swingMelee(world, p, mods.attackSpeed);
 	else if (w.slot === 'main' && input.fire) fireMain(world, p, mods.attackSpeed, mods.reload);

@@ -108,7 +108,8 @@ export class InputController {
 			melee: this.meleeEdge,
 			reload: this.reloadEdge,
 			slot: this.slotEdge,
-			ability: this.abilityEdge
+			ability: this.abilityEdge,
+			interact: h.has('KeyE')
 		};
 		this.meleeEdge = false;
 		this.reloadEdge = false;

@@ -21,6 +21,7 @@ import {
 	type Enemy,
 	type Hit,
 	type Player,
+	type ReviveAction,
 	type World
 } from './world.js';
 
@@ -54,6 +55,7 @@ export class GameSync implements SyncPort {
 	private waveRequest: number | null = null;
 	private clearedRequest: number | null = null;
 	private abilityRequest = false;
+	private reviveQueue: { action: ReviveAction; targetId: string }[] = [];
 
 	private lastSentEnemies = new Map<string, EnemySent>();
 	private lastSentSelf: SelfSent | null = null;
@@ -155,6 +157,9 @@ export class GameSync implements SyncPort {
 	useAbility() {
 		this.abilityRequest = true;
 	}
+	revive(action: ReviveAction, targetId: string) {
+		this.reviveQueue.push({ action, targetId });
+	}
 
 	flush(world: World, host: boolean) {
 		if (!this.ready || this.gone) return;
@@ -190,6 +195,16 @@ export class GameSync implements SyncPort {
 			this.abilityRequest = false;
 			this.call(api.games.useAbility, { gameId });
 		}
+		const reviveFns = {
+			start: api.games.startRevive,
+			cancel: api.games.cancelRevive,
+			finish: api.games.finishRevive
+		};
+		for (const r of this.reviveQueue.splice(0))
+			this.call(reviveFns[r.action], {
+				gameId,
+				targetPlayerId: r.targetId as Id<'gamePlayers'>
+			});
 		if (host) {
 			for (const d of this.damageQueue.splice(0)) {
 				this.call(api.games.damagePlayer, {
@@ -370,6 +385,7 @@ export class GameSync implements SyncPort {
 			if (this.projectileSnapshot !== undefined) this.onProjectiles(this.projectileSnapshot, true);
 		}
 
+		const now = Date.now();
 		const seen = new Set<string>();
 		for (const row of r.players) {
 			seen.add(row._id);
@@ -383,6 +399,11 @@ export class GameSync implements SyncPort {
 			p.stats = row.stats;
 			p.shieldCharges = row.shieldCharges;
 			p.state = row.state;
+			const revivedBy = row.revivedBy ?? null;
+			if (p.revivedBy !== revivedBy) {
+				p.revivedBy = revivedBy;
+				p.reviveSeenAt = now;
+			}
 			p.weapon.overclockUntil = row.overclockUntil ?? 0;
 			p.weapon.abilityReadyAt = row.abilityReadyAt;
 			// An unchanged value can still correct damage blocked by Balance or a shield.
@@ -390,7 +411,6 @@ export class GameSync implements SyncPort {
 		}
 		for (const id of [...world.players.keys()]) if (!seen.has(id)) removePlayer(world, id);
 
-		const now = Date.now();
 		const pk = new Set<string>();
 		for (const row of r.pickups) {
 			if (row.despawnAt <= now) continue;
@@ -444,6 +464,8 @@ export class GameSync implements SyncPort {
 			maxHp: row.maxHp,
 			shieldCharges: row.shieldCharges,
 			state: row.state,
+			revivedBy: null,
+			reviveSeenAt: 0,
 			stats: row.stats,
 			weapon: {
 				slot: 'main',

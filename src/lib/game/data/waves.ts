@@ -52,3 +52,9 @@ export const PLAYER_RADIUS = 0.5;
 export const PICKUP_RADIUS = 1.0;
 export const BLEED_OUT_MS = 30_000;
 export const REVIVE_MS = 4000;
+/** How close a reviver must stand to a downed teammate. */
+export const REVIVE_RANGE = 2.5;
+/** Fraction of max hp a revived player gets back. */
+export const REVIVE_HP_FRACTION = 0.5;
+/** A revive this long past its finish time is abandoned (the reviver left); anyone may take over. */
+export const REVIVE_STALE_MS = 3000;

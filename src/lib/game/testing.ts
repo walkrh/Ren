@@ -13,6 +13,7 @@ import {
 	type GameInfo,
 	type Hit,
 	type Player,
+	type ReviveAction,
 	type World
 } from './world.js';
 import type { WeaponKey } from './data/items.js';
@@ -73,6 +74,8 @@ export function testPlayer(
 		maxHp: stats.maxHp,
 		shieldCharges: 0,
 		state: 'alive',
+		revivedBy: null,
+		reviveSeenAt: 0,
 		stats,
 		weapon: {
 			slot: 'main',
@@ -99,6 +102,7 @@ export type FakeSync = SyncPort & {
 	waves: number[];
 	cleared: number[];
 	abilities: number;
+	revives: { action: ReviveAction; targetId: string }[];
 	flushes: number;
 };
 
@@ -111,6 +115,7 @@ export function fakeSync(): FakeSync {
 		waves: [],
 		cleared: [],
 		abilities: 0,
+		revives: [],
 		flushes: 0,
 		queueHit: (weaponKey, hits) => void s.hits.push({ weaponKey, hits }),
 		queueDamage: (playerId, amount, enemyKey) => void s.damage.push({ playerId, amount, enemyKey }),
@@ -119,6 +124,7 @@ export function fakeSync(): FakeSync {
 		startWave: (wave) => void s.waves.push(wave),
 		waveCleared: (wave) => void s.cleared.push(wave),
 		useAbility: () => void s.abilities++,
+		revive: (action, targetId) => void s.revives.push({ action, targetId }),
 		flush: () => void s.flushes++
 	};
 	return s;
