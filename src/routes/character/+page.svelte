@@ -17,9 +17,9 @@
 		type RaceId
 	} from '#lib/game/traits.js';
 
-	const existing = useQuery(api.characters.mine, {});
+	const existing = useQuery(api.characters.mine, () => ({}));
 	const save = useMutation(api.characters.save);
-	const lobby = useQuery(api.lobbies.mine, {});
+	const lobby = useQuery(api.lobbies.mine, () => ({}));
 
 	let name = $state('');
 	let race = $state<RaceId | null>(null);
@@ -68,15 +68,14 @@
 </svelte:head>
 
 <div class="mx-auto max-w-6xl px-4 py-8">
-	<a href={resolve('/')} class="pixel text-[10px] text-bone-2 hover:text-rot">◀ Back</a>
+	<a href={resolve('/')} class="caps text-bone-2 transition-colors hover:text-gold-3">← Back</a>
 
 	{#if !loaded}
-		<p class="mt-10 animate-blink pixel text-xs text-ash">Loading…</p>
+		<p class="mt-10 animate-flicker text-ash italic">Loading…</p>
 	{:else}
 		<header class="mt-6 max-w-2xl">
-			<p class="pixel text-[10px] text-rot">Customize</p>
-			<h1 class="mt-2 pixel text-2xl text-bone pixel-shadow-sm sm:text-3xl">Roll your survivor</h1>
-			<p class="mt-3 text-bone-2">
+			<h1 class="gilded font-display text-3xl font-bold sm:text-5xl">Roll your survivor</h1>
+			<p class="mt-4 text-lg text-bone-2">
 				Three spins: what you are, where you were born, and the stars above you. Not happy? Roll
 				again as many times as you like, then save.
 			</p>
@@ -116,14 +115,14 @@
 				<CharacterSheet {name} {race} {origin} {constellation} />
 
 				<form
-					class="pixel-box flex flex-col gap-4 bg-surface p-5"
+					class="flex flex-col gap-4 panel p-5"
 					onsubmit={(e) => {
 						e.preventDefault();
 						confirm();
 					}}
 				>
 					<label class="flex flex-col gap-2">
-						<span class="pixel text-[8px] text-ash">Name</span>
+						<span class="caps text-ash">Name</span>
 						<input
 							type="text"
 							bind:value={name}
@@ -131,7 +130,7 @@
 							placeholder="What do they call you?"
 							autocomplete="off"
 							disabled={saving}
-							class="pixel-box bg-ink-2 px-3 py-2 text-bone pixel-box-line-2 placeholder:text-ash focus:outline-none focus:[--px-color:var(--color-rot)]"
+							class="rounded-[2px] border border-line-2 bg-ink-2 px-3 py-2 text-bone transition-colors placeholder:text-ash placeholder:italic focus:border-gold focus:outline-none"
 						/>
 					</label>
 					{#if nameError}
@@ -140,16 +139,15 @@
 
 					<div class="flex items-center justify-between text-base text-ash">
 						<span>Spins</span>
-						<span class="pixel text-[10px] {spinsDone === 3 ? 'text-rot' : 'text-bone-2'}"
-							>{spinsDone} / 3</span
+						<span
+							class={[
+								'font-heading text-sm font-semibold',
+								spinsDone === 3 ? 'text-gold-3' : 'text-bone-2'
+							]}>{spinsDone} / 3</span
 						>
 					</div>
 
-					<button
-						type="submit"
-						disabled={!canSave}
-						class="pixel-box pixel-btn bg-rot py-3 pixel text-[10px] text-ink pixel-box-rot-2 hover:bg-rot-2 disabled:opacity-40"
-					>
+					<button type="submit" disabled={!canSave} class="btn btn-gold">
 						{saving ? 'Saving…' : 'Save survivor'}
 					</button>
 
@@ -158,7 +156,7 @@
 							Your survivor is locked while you're in
 							<a
 								href={resolve('/lobbies/[lobbyId]', { lobbyId: lobby.data._id })}
-								class="underline hover:text-rot">{lobby.data.name}</a
+								class="underline hover:text-gold-3">{lobby.data.name}</a
 							>. Leave the lobby to save changes.
 						</p>
 					{/if}

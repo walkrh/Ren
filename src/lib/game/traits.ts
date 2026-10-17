@@ -34,14 +34,14 @@ export const races: readonly Trait<RaceId>[] = [
 		id: 'agarthan',
 		name: 'Agarthan',
 		grant: '+ Spirit',
-		tagline: 'Born beneath the crust, where the machines never reached.',
+		tagline: 'Keepers of the sacred timeline, waiting beneath the crust for this moment.',
 		effect: 'Spirit slowly heals you over time, even in the middle of a wave.'
 	},
 	{
 		id: 'forsaken',
 		name: 'Forsaken',
 		grant: '+ Rage',
-		tagline: 'Jacked in once. Came back. Not entirely.',
+		tagline: 'They helped build the machines. Now they fight to tear them down.',
 		effect: 'Rage adds bonus damage to every hit you land.'
 	}
 ];
@@ -59,7 +59,7 @@ export const origins: readonly Trait<OriginId>[] = [
 		name: 'Swamp',
 		grant: '+ Stealth',
 		tagline: 'Nothing sees you until it is too late.',
-		effect: 'Bonus stealth: machines notice you from a shorter distance.'
+		effect: "Bonus stealth: the Overlords' machines notice you from a shorter distance."
 	},
 	{
 		id: 'plains',
