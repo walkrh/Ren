@@ -19,6 +19,6 @@
 	{/key}
 {:else}
 	<div class="flex h-dvh items-center justify-center">
-		<div class="pixel text-xs text-bone-2">Loading…</div>
+		<div class="animate-flicker text-bone-2 italic">Loading…</div>
 	</div>
 {/if}

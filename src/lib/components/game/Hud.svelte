@@ -13,13 +13,13 @@
 <div class="pointer-events-none absolute inset-0 z-10 select-none">
 	<!-- Top left: vitals -->
 	<div class="absolute top-4 left-4 flex flex-col gap-2">
-		<div class="pixel text-[10px] text-bone-2">HP {Math.ceil(hud.hp)} / {hud.maxHp}</div>
-		<div class="pixel-box h-4 w-56 bg-ink-2">
+		<div class="caps text-bone-2">HP {Math.ceil(hud.hp)} / {hud.maxHp}</div>
+		<div class="h-3 w-56 rounded-[2px] border border-line-2 bg-ink-2">
 			<div
-				class="h-full"
-				class:bg-rot={hpFrac > 0.5}
-				class:bg-gold={hpFrac <= 0.5 && hpFrac > 0.25}
-				class:bg-blood={hpFrac <= 0.25}
+				class={[
+					'h-full transition-[width] duration-200',
+					hpFrac > 0.5 ? 'bg-gold' : hpFrac > 0.25 ? 'bg-flame' : 'bg-blood'
+				]}
 				style="width: {hpFrac * 100}%"
 			></div>
 		</div>
@@ -34,20 +34,24 @@
 	<!-- Top centre: wave -->
 	<div class="absolute top-4 left-1/2 -translate-x-1/2 text-center">
 		{#if hud.wave === 0}
-			<div class="pixel text-xs text-bone">Get ready</div>
+			<div class="font-heading text-sm font-semibold tracking-[0.18em] text-bone uppercase">
+				Get ready
+			</div>
 		{:else}
-			<div class="pixel text-xs text-bone">Wave {hud.wave} / {hud.bossWave}</div>
+			<div class="font-heading text-sm font-semibold tracking-[0.18em] text-bone uppercase">
+				Wave {hud.wave} / {hud.bossWave}
+			</div>
 		{/if}
 		{#if hud.waveState === 'intermission' && hud.status === 'active'}
-			<div class="mt-1 text-lg text-rot">Next wave in {secs(hud.nextWaveInMs)}s</div>
+			<div class="mt-1 text-lg text-gold-3 italic">Next wave in {secs(hud.nextWaveInMs)}s</div>
 		{:else if hud.status === 'active'}
-			<div class="mt-1 text-lg text-bone-2">{hud.enemiesLeft} left</div>
+			<div class="mt-1 text-lg text-bone-2 italic">{hud.enemiesLeft} left</div>
 		{/if}
 		{#if hud.bossMaxHp > 0}
 			<div class="mt-2 w-80">
-				<div class="pixel text-[10px] text-blood">Overlord · phase {hud.bossPhase}</div>
-				<div class="pixel-box mt-1 h-3 w-full bg-ink-2 pixel-box-blood">
-					<div class="h-full bg-blood" style="width: {bossFrac * 100}%"></div>
+				<div class="caps text-machine">Overlord · phase {hud.bossPhase}</div>
+				<div class="mt-1 h-3 w-full rounded-[2px] border border-crimson bg-ink-2">
+					<div class="h-full bg-machine" style="width: {bossFrac * 100}%"></div>
 				</div>
 			</div>
 		{/if}
@@ -61,35 +65,28 @@
 
 	<!-- Bottom centre: hotbar -->
 	<div class="absolute bottom-5 left-1/2 flex -translate-x-1/2 gap-3">
-		<div class="pixel-box w-36 bg-surface px-3 py-2" class:pixel-box-rot={hud.slot === 'main'}>
-			<div class="pixel text-[8px] text-ash">1 · main</div>
-			<div class="text-sm text-bone">{hud.mainName}</div>
+		<div class={['w-36 panel px-3 py-2', hud.slot === 'main' && 'panel-lit']}>
+			<div class="caps text-ash">1 · main</div>
+			<div class="font-heading text-sm text-bone">{hud.mainName}</div>
 			{#if hud.reloading}
 				<div class="mt-1 h-2 w-full bg-ink-2">
 					<div class="h-full bg-gold" style="width: {hud.reloadFraction * 100}%"></div>
 				</div>
 			{:else}
-				<div
-					class="pixel text-[10px]"
-					class:text-blood={hud.ammo === 0}
-					class:text-bone-2={hud.ammo > 0}
-				>
+				<div class={['font-heading text-xs', hud.ammo === 0 ? 'text-blood' : 'text-bone-2']}>
 					{hud.ammo} / {hud.clipSize}
 				</div>
 			{/if}
 		</div>
-		<div class="pixel-box w-36 bg-surface px-3 py-2" class:pixel-box-rot={hud.slot === 'melee'}>
-			<div class="pixel text-[8px] text-ash">2 · melee</div>
-			<div class="text-sm text-bone">{hud.meleeName}</div>
-			<div class="pixel text-[10px] text-bone-2">RMB / F</div>
+		<div class={['w-36 panel px-3 py-2', hud.slot === 'melee' && 'panel-lit']}>
+			<div class="caps text-ash">2 · melee</div>
+			<div class="font-heading text-sm text-bone">{hud.meleeName}</div>
+			<div class="font-heading text-xs text-bone-2">RMB / F</div>
 		</div>
-		<div
-			class="pixel-box w-36 bg-surface px-3 py-2"
-			class:pixel-box-rot={hud.abilityCooldownMs === 0}
-		>
-			<div class="pixel text-[8px] text-ash">3 · ability</div>
-			<div class="text-sm text-bone">{hud.abilityName}</div>
-			<div class="pixel text-[10px] text-bone-2">
+		<div class={['w-36 panel px-3 py-2', hud.abilityCooldownMs === 0 && 'panel-lit']}>
+			<div class="caps text-ash">3 · ability</div>
+			<div class="font-heading text-sm text-bone">{hud.abilityName}</div>
+			<div class="font-heading text-xs text-bone-2">
 				{#if hud.abilityCooldownMs > 0}{secs(hud.abilityCooldownMs)}s{:else}Space{/if}
 			</div>
 		</div>
@@ -103,29 +100,27 @@
 	<!-- Overlays -->
 	{#if !hud.ready}
 		<div class="absolute inset-0 flex items-center justify-center bg-ink/70">
-			<div class="pixel text-xs text-bone-2">Connecting…</div>
+			<div class="animate-flicker text-bone-2 italic">Connecting…</div>
 		</div>
 	{:else if hud.status === 'victory'}
 		<div
 			class="pointer-events-auto absolute inset-0 flex flex-col items-center justify-center gap-6 bg-ink/80"
 		>
-			<div class="pixel text-4xl text-rot pixel-shadow">Victory</div>
+			<div class="gilded font-display text-5xl font-black tracking-[0.08em]">Victory</div>
 			<div class="text-bone-2">The Overlord is down.</div>
-			<a href={resolve('/lobbies')} class="menu-item pixel-btn w-64 pixel-box-rot">Back to lobby</a>
+			<a href={resolve('/lobbies')} class="btn w-64 btn-gold">Back to lobby</a>
 		</div>
 	{:else if hud.status === 'defeat'}
 		<div
 			class="pointer-events-auto absolute inset-0 flex flex-col items-center justify-center gap-6 bg-ink/80"
 		>
-			<div class="pixel text-4xl text-blood pixel-shadow">Defeat</div>
+			<div class="font-display text-5xl font-black tracking-[0.08em] text-blood">Defeat</div>
 			<div class="text-bone-2">Wave {hud.wave}. The machines win this one.</div>
-			<a href={resolve('/lobbies')} class="menu-item pixel-btn w-64 pixel-box-blood"
-				>Back to lobby</a
-			>
+			<a href={resolve('/lobbies')} class="btn w-64 btn-ghost">Back to lobby</a>
 		</div>
 	{:else if hud.downed}
-		<div class="absolute inset-0 flex items-center justify-center bg-blood/20">
-			<div class="pixel text-xl text-blood pixel-shadow-sm">Downed</div>
+		<div class="absolute inset-0 flex items-center justify-center bg-crimson/25">
+			<div class="font-display text-3xl font-bold text-blood">Downed</div>
 		</div>
 	{/if}
 </div>
