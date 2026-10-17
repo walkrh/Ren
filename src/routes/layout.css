@@ -1,163 +1,169 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap');
 @import 'tailwindcss';
 
 @theme {
-	--font-pixel: 'Press Start 2P', 'Courier New', monospace;
-	--font-body: 'VT323', 'Courier New', monospace;
+	--font-display: 'Cinzel Decorative', 'Cinzel', Georgia, serif;
+	--font-heading: 'Cinzel', Georgia, serif;
+	--font-body: 'IM Fell English', Georgia, serif;
 
-	/* Night, rot, blood, bone */
-	--color-ink: #0b0d0a;
-	--color-ink-2: #141811;
-	--color-surface: #1c2219;
-	--color-surface-2: #263022;
-	--color-line: #3b4a36;
-	--color-line-2: #56704c;
-	--color-bone: #e8e0c5;
-	--color-bone-2: #b2ad95;
-	--color-ash: #767c6a;
-	--color-rot: #9cf05a;
-	--color-rot-2: #5fb32e;
-	--color-rot-3: #244a1c;
-	--color-blood: #d93030;
-	--color-blood-2: #7d1414;
-	--color-gold: #f0c64a;
+	/* Night, iron, parchment, gold leaf, crimson */
+	--color-ink: #0c0a08;
+	--color-ink-2: #15110d;
+	--color-surface: #1d1813;
+	--color-surface-2: #29211a;
+	--color-line: #3a3026;
+	--color-line-2: #5a4a37;
+	--color-bone: #ece0c4;
+	--color-bone-2: #b8aa8d;
+	--color-ash: #7f7462;
+	--color-gold: #c9a24a;
+	--color-gold-2: #8a6a28;
+	--color-gold-3: #ecd08a;
+	--color-crimson: #9e1b1b;
+	--color-crimson-2: #5a0e0e;
+	--color-blood: #d9534a;
+	--color-machine: #ff3b2f;
+	--color-flame: #f0761e;
 }
 
 @layer base {
 	html {
 		color-scheme: dark;
 		background: var(--color-ink);
-		image-rendering: pixelated;
 	}
 	body {
 		background:
-			/* 4px dither */
-			repeating-conic-gradient(rgb(255 255 255 / 0.025) 0% 25%, transparent 0% 50%) 0 0 / 8px 8px,
+			radial-gradient(ellipse 120% 60% at 50% -10%, rgb(158 27 27 / 0.16), transparent 60%),
+			radial-gradient(ellipse 90% 50% at 50% 110%, rgb(201 162 74 / 0.06), transparent 70%),
 			var(--color-ink);
+		background-attachment: fixed;
 		color: var(--color-bone);
 		font-family: var(--font-body);
-		font-size: 1.25rem;
-		line-height: 1.2;
+		font-size: 1.125rem;
+		line-height: 1.45;
 		min-height: 100dvh;
-		-webkit-font-smoothing: none;
-	}
-	/* CRT scanlines */
-	body::after {
-		content: '';
-		position: fixed;
-		inset: 0;
-		pointer-events: none;
-		z-index: 50;
-		background: repeating-linear-gradient(to bottom, transparent 0 2px, rgb(0 0 0 / 0.18) 2px 4px);
 	}
 	button,
 	input {
 		font: inherit;
 	}
 	::selection {
-		background: var(--color-rot-2);
-		color: var(--color-ink);
+		background: var(--color-gold-2);
+		color: var(--color-bone);
 	}
 }
 
-/* Chunky stepped border with notched corners. Set --px-color to recolor. */
-@utility pixel-box {
-	--px-color: var(--color-line);
-	--px: 4px;
-	box-shadow:
-		0 calc(-1 * var(--px)) 0 0 var(--px-color),
-		0 var(--px) 0 0 var(--px-color),
-		calc(-1 * var(--px)) 0 0 0 var(--px-color),
-		var(--px) 0 0 0 var(--px-color);
-	margin: var(--px);
-}
-@utility pixel-box-rot {
-	--px-color: var(--color-rot);
-}
-@utility pixel-box-rot-2 {
-	--px-color: var(--color-rot-2);
-}
-@utility pixel-box-blood {
-	--px-color: var(--color-blood);
-}
-@utility pixel-box-line-2 {
-	--px-color: var(--color-line-2);
-}
-
-/* Press Start 2P for titles and menus */
-@utility pixel {
-	font-family: var(--font-pixel);
+/* Small engraved capitals for labels */
+@utility caps {
+	font-family: var(--font-heading);
 	text-transform: uppercase;
-	line-height: 1.5;
-}
-@utility pixel-shadow {
-	text-shadow:
-		4px 4px 0 var(--color-ink),
-		8px 8px 0 var(--color-rot-3);
-}
-@utility pixel-shadow-sm {
-	text-shadow: 2px 2px 0 var(--color-ink);
+	letter-spacing: 0.18em;
+	font-size: 0.7rem;
+	line-height: 1.4;
 }
 
-@utility pixel-btn {
-	display: block;
-	width: 100%;
-	text-align: center;
+/* Gilded title text */
+@utility gilded {
+	background: linear-gradient(
+		180deg,
+		var(--color-gold-3) 10%,
+		var(--color-gold) 55%,
+		var(--color-gold-2) 100%
+	);
+	-webkit-background-clip: text;
+	background-clip: text;
+	color: transparent;
+	filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.6)) drop-shadow(0 0 24px rgb(201 162 74 / 0.25));
+}
+
+/* Dark card behind grouped content */
+@utility panel {
+	background: rgb(29 24 19 / 0.88);
+	border: 1px solid var(--color-line);
+	border-radius: 2px;
+}
+/* Panel with a gold edge, for finished or selected states */
+@utility panel-lit {
+	border-color: var(--color-gold-2);
+	box-shadow: 0 0 28px -10px rgb(201 162 74 / 0.45);
+}
+
+@utility btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0.8rem 1.25rem;
+	border: 1px solid transparent;
+	border-radius: 2px;
+	font-family: var(--font-heading);
+	font-weight: 600;
+	font-size: 0.8rem;
+	text-transform: uppercase;
+	letter-spacing: 0.16em;
 	cursor: pointer;
-	transition: none;
+	transition:
+		background-color 150ms,
+		border-color 150ms,
+		filter 150ms;
 	&:active:not(:disabled) {
-		transform: translateY(2px);
+		transform: translateY(1px);
 	}
 	&:disabled {
 		cursor: not-allowed;
+		opacity: 0.45;
+	}
+	&:focus-visible {
+		outline: 1px solid var(--color-gold-3);
+		outline-offset: 3px;
+	}
+}
+@utility btn-gold {
+	background: linear-gradient(
+		180deg,
+		var(--color-gold-3),
+		var(--color-gold) 45%,
+		var(--color-gold-2)
+	);
+	border-color: var(--color-gold-2);
+	color: var(--color-ink);
+	&:hover:not(:disabled) {
+		filter: brightness(1.1);
+	}
+}
+@utility btn-ghost {
+	background: transparent;
+	border-color: var(--color-line-2);
+	color: var(--color-gold);
+	&:hover:not(:disabled) {
+		background: var(--color-surface-2);
+		border-color: var(--color-gold-2);
 	}
 }
 
-@keyframes blink {
+@keyframes flicker {
 	0%,
-	49% {
+	100% {
 		opacity: 1;
 	}
-	50%,
-	100% {
-		opacity: 0;
+	45% {
+		opacity: 0.55;
+	}
+	60% {
+		opacity: 0.85;
 	}
 }
 @keyframes land {
 	0% {
-		filter: brightness(2.2);
-	}
-	60% {
-		filter: brightness(2.2);
+		filter: brightness(1.8);
 	}
 	100% {
 		filter: brightness(1);
 	}
 }
-@utility animate-blink {
-	animation: blink 1s steps(1) infinite;
+@utility animate-flicker {
+	animation: flicker 1.8s ease-in-out infinite;
 }
 @utility animate-land {
-	animation: land 280ms steps(2) 1;
-}
-
-/* Title-screen menu entries */
-@layer components {
-	.menu-item {
-		@apply pixel-box pixel-btn flex items-center gap-3 bg-surface px-5 py-4 text-left pixel text-xs text-bone;
-	}
-	.menu-item:hover:not(:disabled),
-	.menu-item:focus-visible {
-		@apply bg-surface-2 text-rot outline-none;
-	}
-	.menu-item:disabled {
-		@apply text-ash;
-	}
-	.menu-item .arrow {
-		@apply invisible text-rot;
-	}
-	.menu-item:hover:not(:disabled) .arrow,
-	.menu-item:focus-visible .arrow {
-		@apply visible animate-blink;
-	}
+	animation: land 500ms ease-out 1;
 }

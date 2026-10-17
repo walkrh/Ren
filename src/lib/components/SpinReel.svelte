@@ -50,31 +50,29 @@
 </script>
 
 <section
-	class="row-span-4 pixel-box grid grid-rows-subgrid gap-4 bg-surface p-4 {value && !spinning
-		? 'pixel-box-rot-2'
-		: ''}"
+	class={['row-span-4 grid grid-rows-subgrid gap-4 panel p-4', { 'panel-lit': value && !spinning }]}
 	aria-live="polite"
 >
 	<header>
-		<div class="pixel text-[8px] text-ash">Spin {slot}</div>
-		<h2 class="pixel text-sm text-bone">{label}</h2>
-		<p class="mt-1 text-base leading-tight text-bone-2">{hint}</p>
+		<div class="caps text-ash">Spin {slot}</div>
+		<h2 class="mt-1 font-heading text-lg font-semibold text-bone">{label}</h2>
+		<p class="mt-1 text-base leading-tight text-bone-2 italic">{hint}</p>
 	</header>
 
 	<div
-		class="pixel-box flex h-44 flex-col items-center justify-center bg-ink-2 px-3 text-center pixel-box-line-2 {value &&
-		!spinning
-			? 'animate-land'
-			: ''}"
+		class={[
+			'flex h-44 flex-col items-center justify-center rounded-[2px] border border-line bg-ink-2 px-3 text-center',
+			{ 'animate-land': value && !spinning }
+		]}
 	>
 		{#if current}
-			<div class="pixel text-base text-bone sm:text-lg">{current.name}</div>
-			<div class="mt-2 pixel text-[9px] text-rot">{current.grant}</div>
+			<div class="font-heading text-xl font-bold text-bone">{current.name}</div>
+			<div class="mt-2 caps text-gold">{current.grant}</div>
 			{#if !spinning}
-				<p class="mt-3 text-base leading-tight text-bone-2">{current.tagline}</p>
+				<p class="mt-3 text-base leading-tight text-bone-2 italic">{current.tagline}</p>
 			{/if}
 		{:else}
-			<div class="animate-blink pixel text-4xl text-ash">?</div>
+			<div class="animate-flicker font-display text-5xl text-line-2">?</div>
 		{/if}
 	</div>
 
@@ -83,8 +81,8 @@
 		aria-label="Possible outcomes"
 	>
 		{#each options as option (option.id)}
-			<li class="text-base {current?.id === option.id ? 'text-rot' : 'text-ash'}">
-				{current?.id === option.id ? '■' : '□'}
+			<li class={['text-base', current?.id === option.id ? 'text-gold-3' : 'text-ash']}>
+				<span class="text-xs">{current?.id === option.id ? '◆' : '◇'}</span>
 				{option.name}
 			</li>
 		{/each}
@@ -94,9 +92,7 @@
 		type="button"
 		onclick={spin}
 		disabled={spinning || disabled}
-		class="pixel-box pixel-btn py-3 pixel text-[10px] disabled:opacity-60 {value
-			? 'bg-surface-2 text-rot pixel-box-line-2 hover:bg-line'
-			: 'bg-rot text-ink pixel-box-rot-2 hover:bg-rot-2'}"
+		class={['btn', value ? 'btn-ghost' : 'btn-gold']}
 	>
 		{#if spinning}
 			Rolling…
